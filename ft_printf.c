@@ -1,135 +1,146 @@
-#include <unistd.h> // Incluyo librería del write, del pritnf y la de leer los argumentos
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_printf.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: krios-fu <krios-fu@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2021/01/11 16:11:18 by krios-fu          #+#    #+#             */
+/*   Updated: 2021/01/11 22:12:05 by krios-fu         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
 
-size_t      ft_strlen(const char *s) // Strlen para calcular largo de strings
+size_t ft_strlen (const char *str)
 {
-    size_t  c = 0;
-    while (s[c])
-        c++;
-    return (c);
+    size_t len;
+
+    len = 0;
+
+    while (str[len] != '\0')
+        len++;
+    
+    return (len);   
 }
 
-int         ft_numlen(long long n, int base_l) // Función para calcular el largo del nº. Se le pasa long long n y base_l
+int ft_intlen (long long num, int base)
 {
-    int     i = 1; // Declaro una variable i que va a ser el largo
-    while (n >= base_l || n <= -base_l) // Mientras sea mayor o igual que base_l o menor o igual que -base_l
+    int len;
+    len = 1;
+
+    while (num >= base || num <= -base)
     {
-        n /= base_l; // N = N / base_l
-        i++; // Sumo elemento
+        num /= base;
+        len++;
     }
-    return (i); // Devuelvo el largo del nº final
+    return (len);   
 }
 
-void        ft_put_num(long long n, int base_l, char *base) // Función para poner nº. Se le pasa long long n, basel y base
+void ft_printnum (long long num, int basel, char *base)
 {
-    if (n >= base_l) // Si es mayor o igual que base_l, recursividad pasandole todo igual menos n / base_l
-        ft_put_num(n / base_l, base_l, base);
-	write(1, &base[n%base_l], 1); // Escribe &base[n%base_l]
+    if(num >= basel)
+        ft_printnum(num/basel, basel, base);
+    write(1, &base[num%basel], 1);
 }
 
-int         ft_printf(const char *format, ...) // Función principal
+int ft_printf(const char *format, ...)
 {
-    va_list list; // Declaro va_list para que me lea los argumentos
-    char    *str, *s, *base; // Declaro str, s y base
-    long    num; // Declaro un long num
-    int     w = 0, p = 0, bolp = 0, n = 0, base_l = 0, len = 0, spc = 0, neg = 0, zero = 0; // Width, prec, boolp, n, base_l, len, espacio, cero y neg
+    va_list list;
 
-    va_start(list, format); // Abro la lectura de argumentos por así decirlo
-    str = (char *)format; // Meto format en str para poder moverme por el sin modificarlo
-    while (*str != '\0') // Mientras exista str
+    char *str, *s, *base;
+    int w = 0, p = 0, dot = 0, spc = 0, zero = 0, neg = 0, basel = 0, len = 0, lenstr = 0;
+    long num;
+    va_start(list, format);
+
+    str =(char *)format;
+
+    while(*str != '\0')
     {
-        if (*str == '%') // Si estoy en un %
+        if(*str == '%')
         {
-            str++; // Pasa a la siguiente posición
-            w = 0, p = 0, bolp = 0, n = 0, spc = 0, neg = 0, zero = 0; // Igualo todo menos base_l a 0
-            while (*str >= '0' && *str <= '9') // Si estoy en un nº este nº es el width
+            int w = 0, p = 0, dot = 0, spc = 0, zero = 0, neg = 0, basel = 0, len = 0, num = 0;
+            str++;
+            while(*str >= '0' && *str <= '9')
             {
-                w = w * 10 + (*str - 48); // Resto 48 para pasarlo a carácter
+                w = w * 10 + (*str - 48);
                 str++;
             }
-            if (*str == '.') // Si estoy en un punto pasa a la siguiente posición
+            if(*str == '.')
             {
                 str++;
-                while (*str >= '0' && *str <= '9') // El nº que haya después del punto lo meto en precisión
+                while(*str >= '0' && *str <= '9')
                 {
-                    p = p * 10 + (*str - 48);
-                    str++;
+                     p = p * 10 + (*str - 48);
+                     str++;
                 }
-                bolp = 1; // Pongo a 1 el boolean de prec
+                     dot = 1;
             }
-            if (*str == 's') // Si estoy en formato s
+            if(*str == 's')
             {
-                s = va_arg(list, char *); // S = el argumento que me pasen en formato char *
-                if (!s) // Si no existe
-                    s = "(null)"; // La igualo a "(null)"
-                n = ft_strlen(s); // Mido la frase y la meto en n
+                s = va_arg(list, char*);
+                if(!s)
+                    s = "(null)";
+                len += ft_strlen (s);
             }
-            if (*str == 'x') // Si estoy en formato x
+            if(*str == 'x')
             {
-                num = va_arg(list, unsigned); // Meto el argumento en num como unsigned
-                base = "0123456789abcdef"; // base = base hexadecimal
-                base_l = 16; // base_l = 16 por hexa
-                n = ft_numlen(num, base_l); // Mido el nº y lo meto en n
+                num = va_arg(list, unsigned);
+                base = "0123456789abcdef";
+                basel = 16;
+                len = ft_intlen (num, basel);
+
             }
-            if (*str == 'd') // Si estoy en formato int
+             if(*str == 'd')
             {
-                num = va_arg(list, int); // Meto en num el argument como int
-                base = "0123456789"; // Base 10
-                base_l = 10; // Base 10
-                if (num < 0) // Si el nº es negativo lo pasa a positivo y neg = 1
+                num = va_arg(list, int);
+                base = "0123456789";
+                basel = 10;
+                if (num < 0)
                 {
                     num *= -1;
                     neg = 1;
                 }
-                n = ft_numlen(num, base_l); // Mido el nº y lo meto en n
+                len = ft_intlen (num, basel);
             }
-            if (bolp == 1 && p >= n && *str != 's') // Si hay prec, es mayor o igual que n y no es formato s
-                zero = p - n; // Calulo ceros
-            else if (bolp == 1 && p < n && *str == 's') // Si hay prec, es menor que n y es s
-                n = p; // El largo de la frase será la prec
-            else if (bolp == 1 && p == 0 && (*str == 's' || num == 0)) // Si hay prec == 0 && num = 0 o formato s
-                n = 0; // El largo de la frase o nº es 0
-            spc = w - n - zero; // Calculo espacios. w - n - zero
-            while (spc-- > 0) // Mientras haya espacios los imprimo y sumo el largo
+            if(dot == 1 && p >= len && *str != 's')
+                zero = p - len;
+            else if (dot == 1 && *str == 's' && p < len)
+                    len = p;
+            else if (dot == 1 && p == 0 && (*str == 's' || num == 0))
+                len = 0;
+            spc = w - len - zero;
+
+            while (spc-- > 0)
+                lenstr += write(1, " ", 1);
+            if(neg == 1)
+                lenstr += write(1, "-", 1);
+            while (zero-- > 0)
+                lenstr += write(1, "0", 1);
+            if(*str == 's')
+                lenstr += write(1, s, len);
+            else if (num > 0)
             {
-                write(1, " ", 1);
-                len++;
-            }
-            if (neg == 1) // Si hay un negativo imprimo el signo
-            {
-                write(1, "-", 1);
-                len++;
-            }
-            while (zero-- > 0) // Mientras haya ceros los imprimo y sumo el largo
-            {
-                write(1, "0", 1);
-                len++;
-            }
-            if (*str == 's') // Si el formato es s
-                write(1, s, n); // Imprimo s con n de largo
-            else if (n > 0) // Si es un nº y es mayor que 0
-                ft_put_num(num, base_l, base); // Pasamos la función recursiva para que imprima el nº
-            len += n; // sumo n al largo
-            str++; // Paso posición y vuelvo a evaluar
+                ft_printnum(num, basel, base);
+                lenstr += len;
+            }       
         }
-        else // Si no estoy en un %
-        {
-            write(1, str, 1); // Escribo la posición en la que estoy, y sumo posición y laro y vuelvo a evaluar
-            str++;
-            len++;
-        }
+        else
+            lenstr += write(1, str, 1);
+        str++;
     }
-    va_end(list); // Cierro la lectura de argumentos
-    return (len); // Devuelvo el largo de la frase creada
+    va_end(list);
+    return(lenstr);
+
 }
 
-
-int main ()
+int main()
 {
-    printf("mio:  --->\n");
-    printf("%d: ",ft_printf("Hola %3.10d %s\n", -3, "hola mundo"));
-    printf("origina --->\n");
-    printf("%d: ",printf("Hola %3.10d %s\n", -3, "hola mundo"));
-
+    printf("----> Mio\n");
+    printf("\n%d\n", ft_printf("holala%d %10.s", 12, "42\0"));
+    printf("\n----> Original\n");
+    printf("\n%d\n", printf("holala%d %10.s", 12, "42\0"));
+    return(0);
 }
