@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: krios-fu <krios-fu@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2021/01/11 16:11:18 by krios-fu          #+#    #+#             */
-/*   Updated: 2021/01/11 22:12:05 by krios-fu         ###   ########.fr       */
+/*   Created: 2021/01/21 14:58:54 by krios-fu          #+#    #+#             */
+/*   Updated: 2021/01/21 15:34:01 by krios-fu         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,129 +14,127 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-size_t ft_strlen (const char *str)
+size_t ft_strlen (const char *s)
 {
-    size_t len;
+    size_t i = 0;
 
-    len = 0;
-
-    while (str[len] != '\0')
-        len++;
-    
-    return (len);   
+    while (s [i] != '\0')
+        i++;
+    return (i);
 }
 
-int ft_intlen (long long num, int base)
+int ft_intlen(long long num, int base)
 {
-    int len;
-    len = 1;
+    int i;
 
-    while (num >= base || num <= -base)
+    i = 1;
+    while(num >= base || num <= -base)
     {
         num /= base;
-        len++;
+        i++;
     }
-    return (len);   
+    return (i);
 }
 
-void ft_printnum (long long num, int basel, char *base)
+void ft_print_num (long long num, int base_l, char *base)
 {
-    if(num >= basel)
-        ft_printnum(num/basel, basel, base);
-    write(1, &base[num%basel], 1);
+
+    if(num >= base_l)
+        ft_print_num(num / base_l, base_l, base);
+    write(1, &base[num%base_l], 1);
 }
 
 int ft_printf(const char *format, ...)
 {
     va_list list;
 
-    char *str, *s, *base;
-    int w = 0, p = 0, dot = 0, spc = 0, zero = 0, neg = 0, basel = 0, len = 0, lenstr = 0;
-    long num;
-    va_start(list, format);
+    char *s, *base, *str;
 
-    str =(char *)format;
+    str = (char *)format;
 
-    while(*str != '\0')
-    {
-        if(*str == '%')
-        {
-            int w = 0, p = 0, dot = 0, spc = 0, zero = 0, neg = 0, basel = 0, len = 0, num = 0;
-            str++;
-            while(*str >= '0' && *str <= '9')
-            {
-                w = w * 10 + (*str - 48);
-                str++;
-            }
-            if(*str == '.')
-            {
-                str++;
-                while(*str >= '0' && *str <= '9')
-                {
+    va_start (list, format);
+     int w = 0, p = 0, basel = 0, spc = 0, dot = 0, zero = 0, len_str = 0, len = 0, num = 0, neg = 0;
+
+     while (*str != '\0')
+     {
+         if (*str == '%')
+         {
+              w = 0, p = 0, basel = 0, spc = 0, dot = 0, zero = 0, len = 0, num = 0, neg = 0;
+             str++;
+             while (*str >= '0' && *str <= '9')
+             {
+                 w = w * 10 + (*str - 48);
+                 str++;
+             }
+             if(*str == '.')
+             {
+                 str++; 
+                while (*str >= '0' && *str <= '9')
+                  {
                      p = p * 10 + (*str - 48);
                      str++;
-                }
-                     dot = 1;
-            }
-            if(*str == 's')
-            {
-                s = va_arg(list, char*);
-                if(!s)
+                 }
+                 dot = 1;
+             }
+             if (*str == 's')
+             {
+                 s = va_arg(list, char *);
+                 if(!s)
                     s = "(null)";
-                len += ft_strlen (s);
-            }
-            if(*str == 'x')
-            {
-                num = va_arg(list, unsigned);
-                base = "0123456789abcdef";
-                basel = 16;
-                len = ft_intlen (num, basel);
-
-            }
-             if(*str == 'd')
-            {
-                num = va_arg(list, int);
-                base = "0123456789";
-                basel = 10;
-                if (num < 0)
-                {
+                len = ft_strlen(s);
+             }
+             else if (*str == 'd')
+             {
+                 num = va_arg(list, int);
+                 if(num < 0)
+                 {
                     num *= -1;
                     neg = 1;
-                }
-                len = ft_intlen (num, basel);
-            }
-            if(dot == 1 && p >= len && *str != 's')
+                 }
+                    basel = 10;
+                    base = "0123456789";
+                len = ft_intlen(num, basel);
+             }
+              else if (*str == 'x')
+             {
+                 num = va_arg(list, unsigned);
+                 basel = 16;
+                 base = "0123456789abcdef";
+                len =  ft_intlen(num, basel);
+             }
+             if(dot == 1 && p >= len && *str != 's')
                 zero = p - len;
-            else if (dot == 1 && *str == 's' && p < len)
-                    len = p;
-            else if (dot == 1 && p == 0 && (*str == 's' || num == 0))
+            if (dot == 1 && *str == 's' && p < len)
+                len = p;
+            if (dot == 1 && p == 0 && (*str == 's' | num == 0))
                 len = 0;
             spc = w - len - zero;
 
-            while (spc-- > 0)
-                lenstr += write(1, " ", 1);
-            if(neg == 1)
-                lenstr += write(1, "-", 1);
-            while (zero-- > 0)
-                lenstr += write(1, "0", 1);
-            if(*str == 's')
-                lenstr += write(1, s, len);
-            else if (num > 0)
-            {
-                ft_printnum(num, basel, base);
-                lenstr += len;
-            }       
+        while (spc-- > 0)
+            len_str += write(1, " ", 1);
+        if (neg == 1)
+            len_str += write(1, "-", 1);
+        while (zero-- > 0)
+            len_str += write(1, "0", 1);
+        if (*str == 's')
+            len_str += write(1, s, len);
+        else if (num >= 0)
+        {
+            len_str += len;
+            ft_print_num(num, basel, base);
         }
-        else
-            lenstr += write(1, str, 1);
+     }
+        else 
+           len_str +=  write (1, str, 1);
         str++;
-    }
-    va_end(list);
-    return(lenstr);
 
+      
+     }
+       va_end(list);
+        return (len_str);
 }
 
-int main()
+int main ()
 {
     printf("----> Mio\n");
     printf("\n%d\n", ft_printf("holala%d %10.s", 12, "42\0"));
@@ -144,3 +142,4 @@ int main()
     printf("\n%d\n", printf("holala%d %10.s", 12, "42\0"));
     return(0);
 }
+
